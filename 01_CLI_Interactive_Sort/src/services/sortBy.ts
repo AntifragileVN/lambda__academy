@@ -3,19 +3,11 @@ import { isNumeric } from '../helpers';
 //a
 export const sortAlphabetically = (str: string) => {
 	const strArray = str.split(' ');
-	const insertArray = [...strArray];
 
 	const wordsArray = strArray.filter((item) => !isNumeric(item));
-	wordsArray.sort((a, b) => {
-		return a.localeCompare(b, 'en', { sensitivity: 'base' });
-	});
-
-	return insertArray
-		.map((item) => {
-			if (!isNumeric(item)) {
-				return wordsArray.shift();
-			}
-			return item;
+	return wordsArray
+		.sort((a, b) => {
+			return a.localeCompare(b, 'en', { sensitivity: 'base' });
 		})
 		.join(' ');
 };
@@ -60,19 +52,11 @@ export const displayNumbersDescending = (str: string) => {
 //d
 export const displayWordsAscendingByLength = (str: string) => {
 	const strArray = str.split(' ');
-	const insertArray = [...strArray];
 
 	const wordsArray = strArray.filter((item) => !isNumeric(item));
-	wordsArray.sort((a, b) => {
-		return a.length - b.length;
-	});
-
-	return insertArray
-		.map((item) => {
-			if (!isNumeric(item)) {
-				return wordsArray.shift();
-			}
-			return item;
+	return wordsArray
+		.sort((a, b) => {
+			return a.length - b.length;
 		})
 		.join(' ');
 };

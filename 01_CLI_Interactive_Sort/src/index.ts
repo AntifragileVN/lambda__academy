@@ -7,23 +7,26 @@ import {
 	displayNumbersDescending,
 	displayWordsAscendingByLength,
 } from './services/sortBy';
-import { checkWordCount, displaySortResult } from './helpers';
+import { checkWordCount, displaySortResult, isNumeric } from './helpers';
 
 let ENTERED_WORDS = '';
-const REQUIRED_WORD_COUNT = 10;
+let REQUIRED_WORD_COUNT = 10;
 
 const prompts = readline.createInterface(process.stdin, process.stdout);
 
 const askForWords = () => {
 	if (!checkWordCount(ENTERED_WORDS, REQUIRED_WORD_COUNT)) {
-		prompts.question(`Enter 10 words and numbers: `, (str) => {
-			if (!checkWordCount(str.trim(), REQUIRED_WORD_COUNT)) {
-				console.log('There must be exactly 10 words');
+		prompts.question(
+			`Hello. Enter ${REQUIRED_WORD_COUNT} words or digits dividing them in spaces :\n`,
+			(str) => {
+				if (!checkWordCount(str.trim(), REQUIRED_WORD_COUNT)) {
+					console.log(`There must be exactly ${REQUIRED_WORD_COUNT} words`);
+					askForWords();
+				}
+				ENTERED_WORDS = str.trim();
 				askForWords();
 			}
-			ENTERED_WORDS = str.trim();
-			askForWords();
-		});
+		);
 	} else {
 		showMenu();
 	}
@@ -38,6 +41,8 @@ const showMenu = () => {
 			'd) Display the words in ascending order based on the number of letters in each word.\n' +
 			'e) Show only unique words.\n' +
 			'f) Show only the unique values from the entire set of words and numbers entered by the user.\n' +
+			'g) Change words.\n' +
+			'h) Change required words count.\n' +
 			'exit\n\n',
 
 		(line) => {
@@ -66,6 +71,15 @@ const showMenu = () => {
 					displaySortResult(ENTERED_WORDS, showUniqueValueInArray);
 					showMenu();
 					break;
+				case 'g':
+					ENTERED_WORDS = '';
+					askForWords();
+					break;
+				case 'h':
+					ENTERED_WORDS = '';
+					REQUIRED_WORD_COUNT = 0;
+					changeWordsLimit();
+					break;
 				case 'exit':
 					return prompts.close();
 					break;
@@ -83,3 +97,24 @@ prompts.on('close', () => {
 	console.log('Exiting the program');
 	process.exit(0);
 });
+
+const changeWordsLimit = () => {
+	if (!REQUIRED_WORD_COUNT) {
+		prompts.question(`Enter new words count:  `, (str) => {
+			const trimmedStr = str.trim();
+
+			if (!isNumeric(trimmedStr)) {
+				console.log(`${trimmedStr} is not a number`);
+				changeWordsLimit();
+			}
+			if (parseInt(trimmedStr) <= 1) {
+				console.log(`Required words count must be at least 2`);
+				changeWordsLimit();
+			}
+			REQUIRED_WORD_COUNT = parseInt(trimmedStr);
+			askForWords();
+		});
+	} else {
+		askForWords();
+	}
+};
