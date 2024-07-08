@@ -22,6 +22,7 @@ const askForWords = () => {
 				if (!checkWordCount(str.trim(), REQUIRED_WORD_COUNT)) {
 					console.log(`There must be exactly ${REQUIRED_WORD_COUNT} words`);
 					askForWords();
+					return;
 				}
 				ENTERED_WORDS = str.trim();
 				askForWords();
@@ -29,6 +30,30 @@ const askForWords = () => {
 		);
 	} else {
 		showMenu();
+	}
+};
+
+const changeWordsLimit = () => {
+	if (!!REQUIRED_WORD_COUNT) {
+		askForWords();
+		return;
+	} else {
+		prompts.question(`Enter new words count:  `, (str) => {
+			const trimmedStr = str.trim();
+
+			if (!isNumeric(trimmedStr)) {
+				console.log(`\n${trimmedStr} is not a number`);
+				changeWordsLimit();
+				return;
+			}
+			if (parseInt(trimmedStr) < 2) {
+				console.log(`Required words count must be at least 2`);
+				changeWordsLimit();
+				return;
+			}
+			REQUIRED_WORD_COUNT = parseInt(trimmedStr);
+			askForWords();
+		});
 	}
 };
 
@@ -97,24 +122,3 @@ prompts.on('close', () => {
 	console.log('Exiting the program');
 	process.exit(0);
 });
-
-const changeWordsLimit = () => {
-	if (!REQUIRED_WORD_COUNT) {
-		prompts.question(`Enter new words count:  `, (str) => {
-			const trimmedStr = str.trim();
-
-			if (!isNumeric(trimmedStr)) {
-				console.log(`${trimmedStr} is not a number`);
-				changeWordsLimit();
-			}
-			if (parseInt(trimmedStr) <= 1) {
-				console.log(`Required words count must be at least 2`);
-				changeWordsLimit();
-			}
-			REQUIRED_WORD_COUNT = parseInt(trimmedStr);
-			askForWords();
-		});
-	} else {
-		askForWords();
-	}
-};
