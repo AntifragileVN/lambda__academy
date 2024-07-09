@@ -1,5 +1,5 @@
 import readline from 'readline';
-import chalk, { cyan } from 'chalk';
+import chalk from 'chalk';
 import {
 	sortAlphabetically,
 	showUniqueValueInArray,
@@ -18,6 +18,26 @@ const prompts = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
 });
+
+const getMenuOptions = () => {
+	const menuOptions = [
+		`${chalk.bold('a)')} Sort the words alphabetically.`,
+		`${chalk.bold('b)')} Display the numbers in ascending order.`,
+		`${chalk.bold('c)')} Display the numbers in descending order.`,
+		`${chalk.bold(
+			'd)'
+		)} Display the words in ascending order based on the number of letters in each word.`,
+		`${chalk.bold('e)')} Show only unique words.`,
+		`${chalk.bold(
+			'f)'
+		)} Show only the unique values from the entire set of words and numbers entered by the user.`,
+		`${chalk.bold('g)')} Change words.`,
+		`${chalk.bold('h)')} Change required words count.`,
+		chalk.red.bold('exit\n'),
+	].join('\n');
+
+	return menuOptions;
+};
 
 const askForWords = () => {
 	if (!checkWordCount(ENTERED_WORDS, REQUIRED_WORD_COUNT)) {
@@ -89,21 +109,9 @@ const changeWordsLimit = () => {
 
 const showMenu = () => {
 	prompts.question(
-		chalk.bold(`\n${questionCharacter} Please Choose an option:\n\n`) +
-			`${chalk.bold('a)')} Sort the words alphabetically.\n` +
-			`${chalk.bold('b)')} Display the numbers in ascending order.\n` +
-			`${chalk.bold('c)')} Display the numbers in descending order.\n` +
-			`${chalk.bold(
-				'd)'
-			)} Display the words in ascending order based on the number of letters in each word.\n` +
-			`${chalk.bold('e)')} Show only unique words.\n` +
-			`${chalk.bold(
-				'f)'
-			)} Show only the unique values from the entire set of words and numbers entered by the user.\n` +
-			`${chalk.bold('g)')} Change words.\n` +
-			`${chalk.bold('h)')} Change required words count.\n` +
-			chalk.red.bold('exit\n\n'),
-
+		`\n${questionCharacter} ${chalk.bold(
+			'Please Choose an option:'
+		)}\n\n${getMenuOptions()}`,
 		(line) => {
 			try {
 				switch (line.trim()) {
@@ -141,7 +149,7 @@ const showMenu = () => {
 						changeWordsLimit();
 						break;
 					case 'exit':
-						return prompts.close();
+						prompts.close();
 						break;
 					default:
 						console.log(
@@ -165,8 +173,4 @@ askForWords();
 prompts.on('close', () => {
 	console.log('Exiting the program');
 	process.exit(0);
-});
-
-prompts.on('line', (input) => {
-	console.log(cyan(input));
 });
