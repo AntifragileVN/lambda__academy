@@ -1,4 +1,5 @@
 import readline from 'readline';
+import chalk, { cyan } from 'chalk';
 import {
 	sortAlphabetically,
 	showUniqueValueInArray,
@@ -8,6 +9,7 @@ import {
 	displayWordsAscendingByLength,
 } from './services/sortBy';
 import { checkWordCount, displaySortResult, isNumeric } from './helpers';
+import { errorCharacter, questionCharacter } from './helpers/constants';
 
 let ENTERED_WORDS = '';
 let REQUIRED_WORD_COUNT = 10;
@@ -20,11 +22,15 @@ const prompts = readline.createInterface({
 const askForWords = () => {
 	if (!checkWordCount(ENTERED_WORDS, REQUIRED_WORD_COUNT)) {
 		prompts.question(
-			`Hello. Enter ${REQUIRED_WORD_COUNT} words or digits dividing them in spaces :\n`,
+			chalk.bold(
+				`${questionCharacter} Hello. Enter ${REQUIRED_WORD_COUNT} words or digits dividing them in spaces :\n`
+			),
 			(str) => {
 				try {
 					if (!checkWordCount(str.trim(), REQUIRED_WORD_COUNT)) {
-						console.log(`There must be exactly ${REQUIRED_WORD_COUNT} words`);
+						console.log(
+							`${errorCharacter} There must be exactly ${REQUIRED_WORD_COUNT} words`
+						);
 						askForWords();
 						return;
 					}
@@ -32,7 +38,7 @@ const askForWords = () => {
 					askForWords();
 				} catch (error) {
 					console.error(
-						'An error occurred while processing your input:',
+						`${errorCharacter} An error occurred while processing your input:`,
 						error
 					);
 					askForWords();
@@ -49,42 +55,54 @@ const changeWordsLimit = () => {
 		askForWords();
 		return;
 	} else {
-		prompts.question(`Enter new words count:  `, (str) => {
-			try {
-				const trimmedStr = str.trim();
+		prompts.question(
+			chalk.bold(`${questionCharacter} Enter new words count:  `),
+			(str) => {
+				try {
+					const trimmedStr = str.trim();
 
-				if (!isNumeric(trimmedStr)) {
-					console.log(`\n${trimmedStr} is not a number`);
+					if (!isNumeric(trimmedStr)) {
+						console.log(`\n${errorCharacter} ${trimmedStr} is not a number`);
+						changeWordsLimit();
+						return;
+					}
+					if (parseInt(trimmedStr) < 2) {
+						console.log(
+							`${errorCharacter} Required words count must be at least 2`
+						);
+						changeWordsLimit();
+						return;
+					}
+					REQUIRED_WORD_COUNT = parseInt(trimmedStr);
+					askForWords();
+				} catch (error) {
+					console.error(
+						`${errorCharacter} An error occurred while processing your input:`,
+						error
+					);
 					changeWordsLimit();
-					return;
 				}
-				if (parseInt(trimmedStr) < 2) {
-					console.log(`Required words count must be at least 2`);
-					changeWordsLimit();
-					return;
-				}
-				REQUIRED_WORD_COUNT = parseInt(trimmedStr);
-				askForWords();
-			} catch (error) {
-				console.error('An error occurred while processing your input:', error);
-				changeWordsLimit();
 			}
-		});
+		);
 	}
 };
 
 const showMenu = () => {
 	prompts.question(
-		'\n> Please Choose an option:\n\n' +
-			'a) Sort the words alphabetically.\n' +
-			'b) Display the numbers in ascending order.\n' +
-			'c) Display the numbers in descending order.\n' +
-			'd) Display the words in ascending order based on the number of letters in each word.\n' +
-			'e) Show only unique words.\n' +
-			'f) Show only the unique values from the entire set of words and numbers entered by the user.\n' +
-			'g) Change words.\n' +
-			'h) Change required words count.\n' +
-			'exit\n\n',
+		chalk.bold(`\n${questionCharacter} Please Choose an option:\n\n`) +
+			`${chalk.bold('a)')} Sort the words alphabetically.\n` +
+			`${chalk.bold('b)')} Display the numbers in ascending order.\n` +
+			`${chalk.bold('c)')} Display the numbers in descending order.\n` +
+			`${chalk.bold(
+				'd)'
+			)} Display the words in ascending order based on the number of letters in each word.\n` +
+			`${chalk.bold('e)')} Show only unique words.\n` +
+			`${chalk.bold(
+				'f)'
+			)} Show only the unique values from the entire set of words and numbers entered by the user.\n` +
+			`${chalk.bold('g)')} Change words.\n` +
+			`${chalk.bold('h)')} Change required words count.\n` +
+			chalk.red.bold('exit\n\n'),
 
 		(line) => {
 			try {
@@ -126,12 +144,14 @@ const showMenu = () => {
 						return prompts.close();
 						break;
 					default:
-						console.log('No such option. Please enter another: ');
+						console.log(
+							`${errorCharacter} No such option. Please enter another: `
+						);
 						showMenu();
 				}
 			} catch (error) {
 				console.error(
-					'An error occurred while processing your selection:',
+					`${errorCharacter} An error occurred while processing your selection:`,
 					error
 				);
 				showMenu();
@@ -145,4 +165,8 @@ askForWords();
 prompts.on('close', () => {
 	console.log('Exiting the program');
 	process.exit(0);
+});
+
+prompts.on('line', (input) => {
+	console.log(cyan(input));
 });
