@@ -12,7 +12,10 @@ import { checkWordCount, displaySortResult, isNumeric } from './helpers';
 let ENTERED_WORDS = '';
 let REQUIRED_WORD_COUNT = 10;
 
-const prompts = readline.createInterface(process.stdin, process.stdout);
+const prompts = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+});
 
 const askForWords = () => {
 	if (!checkWordCount(ENTERED_WORDS, REQUIRED_WORD_COUNT)) {
