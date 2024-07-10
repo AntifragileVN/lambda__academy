@@ -17,19 +17,12 @@ export const findUserByName = async (users: Array<User>) => {
 	const foundUser = users.find((user) => user.name === searchedUserName);
 	if (!foundUser) {
 		console.log(`There is no user with name - ${searchedUserName}`);
-	} else {
-		console.log(foundUser);
+		return null;
 	}
-
-	const continueSearch = await confirm({ message: 'Continue users searching ?' });
-	if (!continueSearch) {
-		process.exit(0);
-	}
-	await findUserByName(users);
-	return;
+	return foundUser;
 };
 
-export const createUser = async (USERS: Array<User>): Promise<void> => {
+export const createUser = async (users: Array<User>) => {
 	const name = await input({
 		message: 'Enter your name',
 		validate: (name: string) => {
@@ -73,9 +66,8 @@ export const createUser = async (USERS: Array<User>): Promise<void> => {
 			return true;
 		},
 	});
+	const createdUser = { name, gender, age: parseInt(age) };
 
-	USERS.push({ name, gender, age: parseInt(age) });
-	console.log(USERS);
-	await createUser(USERS);
-	return;
+	users.push(createdUser);
+	return createdUser;
 };
