@@ -72,12 +72,10 @@ const changeWordsLimit = async () => {
 
 		if (!isNumeric(trimmedStr)) {
 			console.log(`\n${errorCharacter} ${trimmedStr} is not a number`);
-			changeWordsLimit();
 			return null;
 		}
 		if (parseInt(trimmedStr) < 2) {
 			console.log(`${errorCharacter} Required words count must be at least 2`);
-			changeWordsLimit();
 			return null;
 		}
 		return parseInt(trimmedStr);
