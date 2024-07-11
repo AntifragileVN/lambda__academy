@@ -1,4 +1,4 @@
-import { isNumeric } from '../helpers';
+import { isNumeric } from '../helpers/index.helper';
 
 //a
 export const sortAlphabetically = (str: string) => {
