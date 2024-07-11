@@ -6,6 +6,9 @@ export const findUserByName = async (users: Array<User>) => {
 	const searchedUserName = await input({
 		message: 'Enter searched user name',
 		validate: (name: string) => {
+			if (name.trim().length <= 0) {
+				return 'Name can`t me empty string';
+			}
 			if (isNumeric(name)) {
 				return 'Name can`t be number';
 			}
@@ -62,6 +65,9 @@ export const createUser = async (users: Array<User>) => {
 			}
 			if (parseInt(age) < 0) {
 				return 'Age can`t be negative number';
+			}
+			if (parseInt(age) > 160) {
+				return 'Age can`t be bigger than 160';
 			}
 			return true;
 		},
