@@ -2,6 +2,12 @@ import { confirm } from '@inquirer/prompts';
 import { User } from './types/user.type';
 import { createUser, findUserByName } from './services/user.service';
 
+process.stdin.on('data', (key) => {
+	if (key.toString() == '\u0003') {
+		process.exit(0);
+	}
+});
+
 const USERS: Array<User> = [];
 
 const run = async () => {
