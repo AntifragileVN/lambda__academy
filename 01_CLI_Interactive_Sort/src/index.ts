@@ -13,6 +13,8 @@ import { errorCharacter, questionCharacter } from './helpers/constants.helper';
 
 let ENTERED_WORDS = '';
 let REQUIRED_WORD_COUNT = 10;
+const CHANGE_WORDS = 'g';
+const CHANGE_WORD_COUNT = 'h';
 
 const prompts = readline.createInterface({
 	input: process.stdin,
@@ -95,38 +97,42 @@ const showMenu = async () => {
 				'Please Choose an option:'
 			)}\n\n${getMenuOptions()}`
 		);
-
+		let result;
 		switch (selectedOption.trim()) {
 			case 'a':
-				displaySortResult(ENTERED_WORDS, sortAlphabetically);
-				break;
+				result = sortAlphabetically(ENTERED_WORDS);
+				displaySortResult(ENTERED_WORDS, result);
+				return result;
 			case 'b':
-				displaySortResult(ENTERED_WORDS, displayNumbersAscending);
-				break;
+				result = displayNumbersAscending(ENTERED_WORDS);
+				displaySortResult(ENTERED_WORDS, result);
+				return result;
 			case 'c':
-				displaySortResult(ENTERED_WORDS, displayNumbersDescending);
-				break;
+				result = displayNumbersDescending(ENTERED_WORDS);
+				displaySortResult(ENTERED_WORDS, result);
+				return result;
 			case 'd':
-				displaySortResult(ENTERED_WORDS, displayWordsAscendingByLength);
-				break;
+				result = displayWordsAscendingByLength(ENTERED_WORDS);
+				displaySortResult(ENTERED_WORDS, result);
+				return result;
 			case 'e':
-				displaySortResult(ENTERED_WORDS, showUniqueWords);
-				break;
+				result = showUniqueWords(ENTERED_WORDS);
+				displaySortResult(ENTERED_WORDS, result);
+				return result;
 			case 'f':
-				displaySortResult(ENTERED_WORDS, showUniqueValueInArray);
-				break;
+				result = showUniqueValueInArray(ENTERED_WORDS);
+				displaySortResult(ENTERED_WORDS, result);
+				return result;
 			case 'g':
 				ENTERED_WORDS = '';
-				return 'g';
-				break;
+				return CHANGE_WORDS;
 			case 'h':
 				ENTERED_WORDS = '';
 				REQUIRED_WORD_COUNT = 0;
-				return 'h';
-				break;
+				return CHANGE_WORD_COUNT;
 			case 'exit':
 				prompts.close();
-				break;
+				return result;
 			default:
 				console.log(`${errorCharacter} No such option. Please enter another: `);
 		}
@@ -162,10 +168,10 @@ const run = async () => {
 		}
 
 		const menuResponse = await showMenu();
-		if (menuResponse === 'g') {
+		if (menuResponse === CHANGE_WORDS) {
 			continueAsking = true;
 		}
-		if (menuResponse === 'h') {
+		if (menuResponse === CHANGE_WORD_COUNT) {
 			continueChangeCount = true;
 		}
 	}
