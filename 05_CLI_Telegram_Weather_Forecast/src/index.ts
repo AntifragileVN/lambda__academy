@@ -1,37 +1,11 @@
-import TelegramBot from 'node-telegram-bot-api';
 import 'dotenv/config';
+import { getForecast } from './services/weather.js';
 
-const token = process.env.TELEGRAM_BOT_TOKEN || '';
-
-const bot = new TelegramBot(token, {
-	polling: {
-		autoStart: true,
-		interval: 3000,
-		params: {
-			timeout: 10,
-		},
-	},
+const OPEN_WEATHER_API_KEY = process.env.OPEN_WEATHER_API_KEY || '';
+const weather = await getForecast({
+	lang: 'uk',
+	lat: 50.4500336,
+	lon: 30.5241361,
+	appid: OPEN_WEATHER_API_KEY,
 });
-
-const run = () => {
-	console.log('Telegram bot successfully started. . .');
-};
-
-run();
-
-bot.on('message', (msg) => {
-	try {
-		const userName = msg.from?.first_name;
-		if (msg.text === 'photo') {
-			const dateNow = Date.now();
-			const photoPath = `https://picsum.photos/200?random=${dateNow}`;
-			bot.sendPhoto(msg.chat.id, photoPath);
-			console.log(`Користувач ${userName} запросив картинку`);
-			return;
-		}
-		bot.sendMessage(msg.chat.id, `Ви написали '${msg.text}'`);
-		console.log(`Користувач ${userName} написав:  ${msg.text}`);
-	} catch (error) {
-		console.error(error);
-	}
-});
+console.log(weather);
