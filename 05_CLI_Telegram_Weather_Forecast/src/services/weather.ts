@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 type GetWeatherProps = {
 	appid: string;
@@ -7,7 +7,12 @@ type GetWeatherProps = {
 	lang?: string;
 };
 
-type GetForecastResponse = {
+type GetCoordinatesProps = {
+	appid: string;
+	city: string;
+};
+
+type Forecast = {
 	cod: string;
 	message: number;
 	cnt: number;
@@ -54,16 +59,10 @@ type GetForecastResponse = {
 	];
 };
 
-export const getForecast = async ({
-	lat,
-	lon,
-	lang,
-	appid = 'fbdad6e2a16c807552ac86e36257b386',
-}: GetWeatherProps) => {
+export const getForecast = async ({ lat, lon, lang, appid }: GetWeatherProps) => {
 	try {
-		console.log(lat, lon, lang, appid);
-		const response = await axios.get(
-			`https://api.openweathermap.org/data/2.5/forecast`,
+		const response: AxiosResponse = await axios.get(
+			'https://api.openweathermap.org/data/2.5/forecast',
 			{
 				params: {
 					lat,
@@ -73,6 +72,21 @@ export const getForecast = async ({
 				},
 			}
 		);
+		const forecast: Forecast = response.data;
+		return forecast;
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+export const getCoordinates = async ({ appid, city }: GetCoordinatesProps) => {
+	try {
+		const response = await axios.get('http://api.openweathermap.org/geo/1.0/direct', {
+			params: {
+				q: city,
+				appid,
+			},
+		});
 		return response.data;
 	} catch (error) {
 		console.log(error);
