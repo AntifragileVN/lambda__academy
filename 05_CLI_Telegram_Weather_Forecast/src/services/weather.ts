@@ -1,10 +1,12 @@
 import axios, { AxiosResponse } from 'axios';
+import { Forecast } from '../types/weather.type.js';
 
 type GetWeatherProps = {
 	appid: string;
 	lat: number;
 	lon: number;
 	lang?: string;
+	units?: string;
 };
 
 type GetCoordinatesProps = {
@@ -12,54 +14,7 @@ type GetCoordinatesProps = {
 	city: string;
 };
 
-type Forecast = {
-	cod: string;
-	message: number;
-	cnt: number;
-	list: [
-		{
-			dt: number;
-			main: {
-				temp: number;
-				feels_like: number;
-				temp_min: number;
-				temp_max: number;
-				pressure: number;
-				sea_level: number;
-				grnd_level: number;
-				humidity: number;
-				temp_kf: number;
-			};
-			weather: [
-				{
-					id: number;
-					main: string;
-					description: string;
-					icon: string;
-				}
-			];
-			clouds: {
-				all: number;
-			};
-			wind: {
-				speed: number;
-				deg: number;
-				gust: number;
-			};
-			visibility: number;
-			pop: number;
-			rain?: {
-				[key: string]: number;
-			};
-			sys: {
-				pod: string;
-			};
-			dt_txt: string;
-		}
-	];
-};
-
-export const getForecast = async ({ lat, lon, lang, appid }: GetWeatherProps) => {
+export const getForecast = async ({ lat, lon, lang, units, appid }: GetWeatherProps) => {
 	try {
 		const response: AxiosResponse = await axios.get(
 			'https://api.openweathermap.org/data/2.5/forecast',
@@ -69,6 +24,7 @@ export const getForecast = async ({ lat, lon, lang, appid }: GetWeatherProps) =>
 					lon,
 					lang,
 					appid,
+					units,
 				},
 			}
 		);
@@ -88,6 +44,27 @@ export const getCoordinates = async ({ appid, city }: GetCoordinatesProps) => {
 			},
 		});
 		return response.data;
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+export const getForecastByCity = async (city: string, appid: string) => {
+	try {
+		const coordinates = await getCoordinates({
+			city,
+			appid,
+		});
+
+		const { name, lat, lon, ...rest } = coordinates[0];
+		const forecast = await getForecast({
+			lang: 'uk',
+			lat,
+			lon,
+			appid,
+			units: 'metric',
+		});
+		return forecast;
 	} catch (error) {
 		console.log(error);
 	}
