@@ -21,6 +21,8 @@ const userIntervals: UserIntervals = {};
 
 const token = process.env.TELEGRAM_BOT_TOKEN || '';
 const appid = process.env.OPEN_WEATHER_API_KEY || '';
+const port: number = Number(process.env.APP_PORT) || 3000;
+const url = process.env.APP_URL || '/';
 
 const commands = {
 	city_forecast: 'Weather forecast in Kyiv',
@@ -29,14 +31,12 @@ const commands = {
 };
 
 const bot = new TelegramBot(token, {
-	polling: {
-		autoStart: true,
-		interval: 3000,
-		params: {
-			timeout: 10,
-		},
+	webHook: {
+		port,
 	},
 });
+
+bot.setWebHook(`${url}/bot${token}`);
 
 bot.onText(/\/start/, (msg) => {
 	bot.sendMessage(msg.chat.id, 'Welcome', {
