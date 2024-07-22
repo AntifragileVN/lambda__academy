@@ -21,7 +21,7 @@ const userIntervals: UserIntervals = {};
 
 const token = process.env.TELEGRAM_BOT_TOKEN || '';
 const appid = process.env.OPEN_WEATHER_API_KEY || '';
-const port: number = Number(process.env.APP_PORT) || 3000;
+const port: number = Number(process.env.PORT) || 3000;
 const url = process.env.APP_URL || '/';
 
 const commands = {
