@@ -25,23 +25,38 @@ const port: number = Number(process.env.PORT) || 3000;
 const url = process.env.APP_URL || '/';
 
 const commands = {
-	city_forecast: 'Weather forecast in Kyiv',
-	forecast_interval_3: 'With a 3-hour interval',
-	forecast_interval_6: 'With a 6-hour interval',
 	weather_menu: '/Погода',
 	currency_menu: '/Курс валют',
+	previous_menu: 'Поперднє меню',
+	city_forecast: 'Погода в Києві',
+	forecast_interval_3: 'Кожні 3 години',
+	forecast_interval_6: 'Кожні 6 години',
+	dollars_exchange: 'USD',
+	euro_exchange: 'EUR	',
 };
 
-const bot = new TelegramBot(token, {
-	webHook: {
-		port,
-	},
-});
+let bot;
 
-bot.setWebHook(`${url}/bot${token}`);
+if (process.env.environment === 'PRODUCTION') {
+	bot = new TelegramBot(token, {
+		webHook: {
+			port,
+		},
+	});
 
-bot.onText(/\/Погода/, (msg) => {
-	bot.sendMessage(msg.chat.id, 'Welcome', {
+	bot.setWebHook(`${url}/bot${token}`);
+} else {
+	bot = new TelegramBot(token, {
+		polling: true,
+	});
+}
+
+const weatherMenuRegex = new RegExp(`${commands.weather_menu}`, 'i');
+const currencyMenuRegex = new RegExp(`${commands.currency_menu}`, 'i');
+const startMenuRegex = new RegExp(`\/start|${commands.previous_menu}`, 'i');
+
+bot.onText(weatherMenuRegex, (msg) => {
+	bot.sendMessage(msg.chat.id, 'Weather menu', {
 		reply_markup: {
 			keyboard: [
 				[{ text: commands.city_forecast }],
@@ -49,13 +64,25 @@ bot.onText(/\/Погода/, (msg) => {
 					{ text: commands.forecast_interval_3 },
 					{ text: commands.forecast_interval_6 },
 				],
+				[{ text: commands.previous_menu }],
 			],
 		},
 	});
 });
 
-bot.onText(/\/start/, (msg) => {
-	bot.sendMessage(msg.chat.id, 'Welcome', {
+bot.onText(currencyMenuRegex, (msg) => {
+	bot.sendMessage(msg.chat.id, 'Оберіть валюту яка вас цікавить', {
+		reply_markup: {
+			keyboard: [
+				[{ text: commands.dollars_exchange }, { text: commands.euro_exchange }],
+				[{ text: commands.previous_menu }],
+			],
+		},
+	});
+});
+
+bot.onText(startMenuRegex, (msg) => {
+	bot.sendMessage(msg.chat.id, 'Start Menu', {
 		reply_markup: {
 			keyboard: [
 				[{ text: commands.weather_menu }],
