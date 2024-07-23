@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import 'dotenv/config';
-import { getForecastByCity } from './services/weather.js';
+import { getForecastByCity } from './services/weather.service.js';
 import {
 	formatTime,
 	displayTemperature,
@@ -41,7 +41,7 @@ const commands = {
 
 let bot;
 
-if (process.env.environment === 'PRODUCTION') {
+if (process.env.ENVIRONMENT === 'PRODUCTION') {
 	bot = new TelegramBot(token, {
 		webHook: {
 			port,
@@ -55,6 +55,7 @@ if (process.env.environment === 'PRODUCTION') {
 	});
 }
 
+bot.setMyCommands([{ command: '/start', description: 'Запустити бота' }]);
 const weatherMenuRegex = new RegExp(`${commands.weather_menu}`, 'i');
 const currencyMenuRegex = new RegExp(`${commands.currency_menu}`, 'i');
 const startMenuRegex = new RegExp(`\/start|${commands.previous_menu}`, 'i');
