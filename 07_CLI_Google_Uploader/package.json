@@ -1,0 +1,23 @@
+{
+	"name": "07_cli_google_uploader",
+	"version": "1.0.0",
+	"main": "dist/index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "tsc && node dist/index.js",
+		"build": "tsc"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"typescript": "^5.5.3"
+	},
+	"dependencies": {
+		"@inquirer/prompts": "^5.1.2",
+		"@types/node": "^20.14.10",
+		"chalk": "^4.1.2",
+		"dotenv": "^16.4.5"
+	}
+}
