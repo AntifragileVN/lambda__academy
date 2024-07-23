@@ -8,6 +8,10 @@ import {
 	formatDate,
 } from './helpers/index.helper.js';
 import { TelegramBotError } from './types/telegramBot.types.js';
+import {
+	getMonoBankCurrencyRate,
+	getPrivateCurrencyRate,
+} from './services/currency.service.js';
 
 const INTERVAL_3_HOURS = 10800000;
 const INTERVAL_6_HOURS = 21600000;
@@ -27,12 +31,12 @@ const url = process.env.APP_URL || '/';
 const commands = {
 	weather_menu: '/Погода',
 	currency_menu: '/Курс валют',
-	previous_menu: 'Поперднє меню',
+	previous_menu: 'Поперeднє меню',
 	city_forecast: 'Погода в Києві',
 	forecast_interval_3: 'Кожні 3 години',
 	forecast_interval_6: 'Кожні 6 години',
 	dollars_exchange: 'USD',
-	euro_exchange: 'EUR	',
+	euro_exchange: 'EUR',
 };
 
 let bot;
@@ -135,34 +139,52 @@ const sendForecastToBot = async (id: number) => {
 bot.on('message', async (msg) => {
 	const chatId = msg.chat.id;
 
-	switch (msg.text) {
-		case commands.city_forecast:
-			sendForecastToBot(chatId);
-			break;
+	if (msg.text === commands.city_forecast) {
+		sendForecastToBot(chatId);
+	} else if (msg.text === commands.forecast_interval_3) {
+		if (userIntervals[chatId]) {
+			clearInterval(userIntervals[chatId]);
+		}
+		const intervalId3 = setInterval(
+			() => sendForecastToBot(chatId),
+			INTERVAL_3_HOURS
+		);
+		userIntervals[chatId] = intervalId3;
+	} else if (msg.text === commands.forecast_interval_6) {
+		if (userIntervals[chatId]) {
+			clearInterval(userIntervals[chatId]);
+		}
+		const intervalId6 = setInterval(
+			() => sendForecastToBot(chatId),
+			INTERVAL_6_HOURS
+		);
+		userIntervals[chatId] = intervalId6;
+	} else if (msg.text === commands.dollars_exchange) {
+		const monoBankRate = await getMonoBankCurrencyRate();
+		const privateBankRate = await getPrivateCurrencyRate();
 
-		case commands.forecast_interval_3:
-			if (userIntervals[chatId]) {
-				clearInterval(userIntervals[chatId]);
-			}
-			const intervalId3 = setInterval(
-				() => sendForecastToBot(chatId),
-				INTERVAL_3_HOURS
-			);
-			userIntervals[chatId] = intervalId3;
-			break;
+		const monoUsdRate = monoBankRate.find(
+			(rate) => rate.currencyCodeA === 840 && rate.currencyCodeB === 980
+		);
+		const privateUsdRate = privateBankRate.find((rate) => rate.ccy === 'USD');
 
-		case commands.forecast_interval_6:
-			if (userIntervals[chatId]) {
-				clearInterval(userIntervals[chatId]);
-			}
-			const intervalId6 = setInterval(
-				() => sendForecastToBot(chatId),
-				INTERVAL_6_HOURS
-			);
-			userIntervals[chatId] = intervalId6;
-			break;
+		bot.sendMessage(
+			chatId,
+			`DOLLARS CURRENCY RATE:\n\nMonobank:\n${monoUsdRate?.rateBuy}/${monoUsdRate?.rateSell}\n\nPrivate Bank:\n${privateUsdRate?.buy}/${privateUsdRate?.sale}`
+		);
+	} else if (msg.text === commands.euro_exchange) {
+		const monoBankRate = await getMonoBankCurrencyRate();
+		const privateBankRate = await getPrivateCurrencyRate();
 
-		default:
-			break;
+		const monoEuroRate = monoBankRate.find(
+			(rate) => rate.currencyCodeA === 978 && rate.currencyCodeB === 980
+		);
+		const privateEuroRate = privateBankRate.find((rate) => rate.ccy === 'EUR');
+
+		bot.sendMessage(
+			chatId,
+			`EURO CURRENCY RATE:\n\nMonobank:\n${monoEuroRate?.rateBuy}/${monoEuroRate?.rateSell}\n\nPrivate Bank:\n${privateEuroRate?.buy}/${privateEuroRate?.sale}`
+		);
+	} else {
 	}
 });
