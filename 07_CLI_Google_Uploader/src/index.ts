@@ -1,6 +1,10 @@
+import fs from 'fs';
+import { google } from 'googleapis';
+import 'dotenv/config';
 import { confirm } from '@inquirer/prompts';
-import { User } from './types/user.type';
-import { createUser, findUserByName } from './services/user.service';
+import apikeys from '../apikey.json';
+
+import type { drive_v3 } from 'googleapis';
 
 process.stdin.on('data', (key) => {
 	if (key.toString() == '\u0003') {
@@ -8,44 +12,68 @@ process.stdin.on('data', (key) => {
 	}
 });
 
-const USERS: Array<User> = [];
+const googleFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+const SCOPE = ['https://www.googleapis.com/auth/drive'];
+
+const authorize = async () => {
+	const jwtClient = new google.auth.JWT(
+		apikeys.client_email,
+		undefined,
+		apikeys.private_key,
+		SCOPE
+	);
+	await jwtClient.authorize();
+	return jwtClient;
+};
+
+const uploadFile = async (drive: drive_v3.Drive) => {
+	const fileMetaData = {
+		name: 'text.txt',
+		parents: [googleFolderId],
+	};
+
+	const res = await drive.files.create({
+		requestBody: fileMetaData,
+		media: {
+			body: fs.createReadStream('text.txt'),
+			mimeType: 'text/plain',
+		},
+		fields: 'id',
+	});
+	return res.data.id;
+};
+
+async function generatePublicUrl(drive: drive_v3.Drive, fileId: string) {
+	try {
+		await drive.permissions.create({
+			fileId: fileId,
+			requestBody: {
+				role: 'reader',
+				type: 'anyone',
+			},
+		});
+		const result = await drive.files.get({
+			fileId: fileId,
+			fields: 'webViewLink, webContentLink',
+		});
+		return result;
+	} catch (err) {
+		console.log(err);
+	}
+}
 
 const run = async () => {
-	let continueCreating = true;
-	let continueSearching = true;
+	try {
+		const authClient = await authorize();
+		const drive = google.drive({ version: 'v3', auth: authClient });
+		const fileId = (await uploadFile(drive)) || '';
+		const response = await generatePublicUrl(drive, fileId);
+		const publicUrl = response?.data.webViewLink;
 
-	while (continueCreating) {
-		const createdUser = await createUser(USERS);
-		console.log(USERS);
-		console.log(`\n`);
-		const confirmContinue = await confirm({ message: 'Create another user ?' });
-		if (!confirmContinue) {
-			continueCreating = false;
-		}
+		console.log(publicUrl);
+	} catch (error) {
+		console.log(error);
 	}
-
-	const confirmSearch = await confirm({ message: 'Find a user by name ?' });
-	if (!confirmSearch) {
-		console.log('Have a nice day ^-^');
-		process.exit(0);
-	}
-	if (USERS.length === 0) {
-		console.log('There is no users in database\n');
-		process.exit(0);
-	}
-
-	while (continueSearching) {
-		const foundUser = await findUserByName(USERS);
-		if (foundUser) {
-			console.log(foundUser);
-		}
-		const confirmContinue = await confirm({ message: 'Continue users searching ?' });
-		if (!confirmContinue) {
-			continueSearching = false;
-		}
-	}
-	console.log('Have a nice day ^-^');
-	process.exit(0);
 };
 
 run();
