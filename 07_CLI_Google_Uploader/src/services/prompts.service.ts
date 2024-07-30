@@ -1,6 +1,5 @@
 import { input, confirm } from '@inquirer/prompts';
 import { isNumeric } from '../helpers/isNumeric.helper';
-import { books } from 'googleapis/build/src/apis/books';
 
 export const askForFilePath = async (): Promise<string> => {
 	return await input({
@@ -30,6 +29,9 @@ export const askForNewFileName = async (): Promise<string> => {
 		validate: (name) => {
 			if (name.trim().length <= 0) {
 				return 'You must write something';
+			}
+			if (/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i.test(name)) {
+				return 'There must be no photo extensions';
 			}
 			return true;
 		},

@@ -2,9 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import 'dotenv/config';
 import { google } from 'googleapis';
-import { authorize, generatePublicUrl } from './services/googleDrive.service';
-import apikeys from '../apikey.json';
-import { ApiKeys } from './types/index.type';
+import { generatePublicUrl } from './services/googleDrive.service';
 import {
 	askForFilePath,
 	askForNewFileName,
@@ -13,6 +11,9 @@ import {
 } from './services/prompts.service';
 import { displayFileInfo } from './helpers/displayFileInfo.helper';
 import { createShortenedLink } from './services/tinyurl.service';
+import { generateOAuthClient } from './services/googleAuth';
+import clientSecrets from '../client_secret.json';
+import type { ClientSecret } from './types/index.type';
 
 process.stdin.on('data', (key) => {
 	if (key.toString() == '\u0003') {
@@ -36,6 +37,12 @@ const SCOPE = ['https://www.googleapis.com/auth/drive'];
 
 const run = async () => {
 	try {
+		const oAuth2Client = await generateOAuthClient(
+			clientSecrets as ClientSecret,
+			SCOPE
+		);
+		const drive = google.drive({ version: 'v3', auth: oAuth2Client });
+
 		const filePath = await askForFilePath();
 		const fileData = await readFileByPath(filePath);
 
@@ -51,8 +58,6 @@ const run = async () => {
 		if (confirmRename) {
 			newFileName = await askForNewFileName();
 		}
-		const authClient = await authorize(apikeys as ApiKeys, SCOPE);
-		const drive = google.drive({ version: 'v3', auth: authClient });
 		const fileMetaData = {
 			name: newFileName || fileData?.name,
 			parents: [googleFolderId],
