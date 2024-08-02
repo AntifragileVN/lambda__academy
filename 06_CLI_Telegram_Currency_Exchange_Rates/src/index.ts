@@ -1,12 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import 'dotenv/config';
 import { getForecastByCity } from './services/weather.service.js';
-import {
-	formatTime,
-	displayTemperature,
-	groupForecastByDate,
-	formatDate,
-} from './helpers/index.helper.js';
+import { getFormattedForecast } from './helpers/index.helper.js';
+
 import { TelegramBotError } from './types/telegramBot.types.js';
 import {
 	getMonoBankCurrencyRate,
@@ -56,77 +52,57 @@ if (process.env.ENVIRONMENT === 'PRODUCTION') {
 }
 
 bot.setMyCommands([{ command: '/start', description: 'Запустити бота' }]);
-const weatherMenuRegex = new RegExp(`${commands.weather_menu}`, 'i');
-const currencyMenuRegex = new RegExp(`${commands.currency_menu}`, 'i');
+const weatherMenuRegex = new RegExp(commands.weather_menu, 'i');
+const currencyMenuRegex = new RegExp(commands.currency_menu, 'i');
 const startMenuRegex = new RegExp(`\/start|${commands.previous_menu}`, 'i');
 
-bot.onText(weatherMenuRegex, (msg) => {
-	bot.sendMessage(msg.chat.id, 'Weather menu', {
-		reply_markup: {
-			keyboard: [
-				[{ text: commands.city_forecast }],
-				[
-					{ text: commands.forecast_interval_3 },
-					{ text: commands.forecast_interval_6 },
-				],
-				[{ text: commands.previous_menu }],
+const weatherMenu = {
+	reply_markup: {
+		keyboard: [
+			[{ text: commands.city_forecast }],
+			[
+				{ text: commands.forecast_interval_3 },
+				{ text: commands.forecast_interval_6 },
 			],
-		},
-	});
+			[{ text: commands.previous_menu }],
+		],
+	},
+};
+
+const currencyMenu = {
+	reply_markup: {
+		keyboard: [
+			[{ text: commands.dollars_exchange }, { text: commands.euro_exchange }],
+			[{ text: commands.previous_menu }],
+		],
+	},
+};
+
+const mainMenu = {
+	reply_markup: {
+		keyboard: [[{ text: commands.weather_menu }], [{ text: commands.currency_menu }]],
+	},
+};
+
+bot.onText(weatherMenuRegex, (msg) => {
+	bot.sendMessage(msg.chat.id, 'Weather menu', weatherMenu);
 });
 
 bot.onText(currencyMenuRegex, (msg) => {
-	bot.sendMessage(msg.chat.id, 'Оберіть валюту яка вас цікавить', {
-		reply_markup: {
-			keyboard: [
-				[{ text: commands.dollars_exchange }, { text: commands.euro_exchange }],
-				[{ text: commands.previous_menu }],
-			],
-		},
-	});
+	bot.sendMessage(msg.chat.id, 'Оберіть валюту яка вас цікавить', currencyMenu);
 });
 
 bot.onText(startMenuRegex, (msg) => {
-	bot.sendMessage(msg.chat.id, 'Start Menu', {
-		reply_markup: {
-			keyboard: [
-				[{ text: commands.weather_menu }],
-				[{ text: commands.currency_menu }],
-			],
-		},
-	});
+	bot.sendMessage(msg.chat.id, 'Головне меню', mainMenu);
 });
-
-const getFormattedForecast = async () => {
-	const weather = await getForecastByCity(city, appid);
-	if (weather) {
-		const groupedForecast = groupForecastByDate(weather);
-		const message = groupedForecast
-			.map(({ items, date }) => {
-				const dayForecast = items
-					.map(({ main: { temp, feels_like }, weather, dt_txt }) => {
-						const date = new Date(dt_txt);
-						const description = weather[0].description;
-						const formattedTime = formatTime(date);
-						const formattedTemp = displayTemperature(Math.round(temp));
-						const formattedFeelsLike = displayTemperature(
-							Math.round(feels_like)
-						);
-						return `  ${formattedTime}, ${formattedTemp}, відчувається: ${formattedFeelsLike}, ${description} `;
-					})
-					.join('\n');
-				return `${formatDate(new Date(date))}\n${dayForecast}`;
-			})
-			.join('\n\n');
-		return message;
-	}
-	return '';
-};
 
 const sendForecastToBot = async (id: number) => {
 	try {
-		const message = await getFormattedForecast();
-		await bot.sendMessage(id, message);
+		const weather = await getForecastByCity(city, appid);
+		if (weather) {
+			const message = await getFormattedForecast(weather);
+			await bot.sendMessage(id, message);
+		}
 	} catch (error) {
 		const telegramBotError = error as TelegramBotError;
 		console.error('error', error);
@@ -137,55 +113,52 @@ const sendForecastToBot = async (id: number) => {
 	}
 };
 
+const sendCurrencyRate = async (chatId: number, currency: 'USD' | 'EUR') => {
+	const [monoBankRate, privateBankRate] = await Promise.all([
+		getMonoBankCurrencyRate(),
+		getPrivateCurrencyRate(),
+	]);
+
+	const monoRate = monoBankRate.find(
+		(rate) =>
+			rate.currencyCodeA === (currency === 'USD' ? 840 : 978) &&
+			rate.currencyCodeB === 980
+	);
+	const privateRate = privateBankRate.find((rate) => rate.ccy === currency);
+
+	bot.sendMessage(
+		chatId,
+		`${currency} CURRENCY RATE:\n\nMonobank:\n${monoRate?.rateBuy}/${monoRate?.rateSell}\n\nPrivate Bank:\n${privateRate?.buy}/${privateRate?.sale}`
+	);
+};
+
 bot.on('message', async (msg) => {
 	const chatId = msg.chat.id;
 
-	if (msg.text === commands.city_forecast) {
-		sendForecastToBot(chatId);
-	} else if (msg.text === commands.forecast_interval_3) {
-		if (userIntervals[chatId]) {
-			clearInterval(userIntervals[chatId]);
-		}
-		const intervalId3 = setInterval(
-			() => sendForecastToBot(chatId),
-			INTERVAL_3_HOURS
-		);
-		userIntervals[chatId] = intervalId3;
-	} else if (msg.text === commands.forecast_interval_6) {
-		if (userIntervals[chatId]) {
-			clearInterval(userIntervals[chatId]);
-		}
-		const intervalId6 = setInterval(
-			() => sendForecastToBot(chatId),
-			INTERVAL_6_HOURS
-		);
-		userIntervals[chatId] = intervalId6;
-	} else if (msg.text === commands.dollars_exchange) {
-		const monoBankRate = await getMonoBankCurrencyRate();
-		const privateBankRate = await getPrivateCurrencyRate();
-
-		const monoUsdRate = monoBankRate.find(
-			(rate) => rate.currencyCodeA === 840 && rate.currencyCodeB === 980
-		);
-		const privateUsdRate = privateBankRate.find((rate) => rate.ccy === 'USD');
-
-		bot.sendMessage(
-			chatId,
-			`DOLLARS CURRENCY RATE:\n\nMonobank:\n${monoUsdRate?.rateBuy}/${monoUsdRate?.rateSell}\n\nPrivate Bank:\n${privateUsdRate?.buy}/${privateUsdRate?.sale}`
-		);
-	} else if (msg.text === commands.euro_exchange) {
-		const monoBankRate = await getMonoBankCurrencyRate();
-		const privateBankRate = await getPrivateCurrencyRate();
-
-		const monoEuroRate = monoBankRate.find(
-			(rate) => rate.currencyCodeA === 978 && rate.currencyCodeB === 980
-		);
-		const privateEuroRate = privateBankRate.find((rate) => rate.ccy === 'EUR');
-
-		bot.sendMessage(
-			chatId,
-			`EURO CURRENCY RATE:\n\nMonobank:\n${monoEuroRate?.rateBuy}/${monoEuroRate?.rateSell}\n\nPrivate Bank:\n${privateEuroRate?.buy}/${privateEuroRate?.sale}`
-		);
-	} else {
+	switch (msg.text) {
+		case commands.city_forecast:
+			await sendForecastToBot(chatId);
+			break;
+		case commands.forecast_interval_3:
+			if (userIntervals[chatId]) clearInterval(userIntervals[chatId]);
+			userIntervals[chatId] = setInterval(
+				() => sendForecastToBot(chatId),
+				INTERVAL_3_HOURS
+			);
+			break;
+		case commands.forecast_interval_6:
+			if (userIntervals[chatId]) clearInterval(userIntervals[chatId]);
+			userIntervals[chatId] = setInterval(
+				() => sendForecastToBot(chatId),
+				INTERVAL_6_HOURS
+			);
+			break;
+		case commands.dollars_exchange:
+		case commands.euro_exchange:
+			await sendCurrencyRate(
+				chatId,
+				msg.text === commands.dollars_exchange ? 'USD' : 'EUR'
+			);
+			break;
 	}
 });
