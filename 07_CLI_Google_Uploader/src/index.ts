@@ -9,10 +9,12 @@ import {
 	confirmRenameFile,
 	confirmShortenLink,
 } from './services/prompts.service';
-import { displayFileInfo } from './helpers/displayFileInfo.helper';
 import { createShortenedLink } from './services/tinyurl.service';
-import { generateOAuthClient } from './services/googleAuth';
+import { generateOAuthClient } from './services/googleAuth.service';
 import clientSecrets from '../client_secret.json';
+import { readFileByPath } from './helpers/readFileByPath.helper';
+import { displayFileInfo } from './helpers/displayFileInfo.helper';
+
 import type { ClientSecret } from './types/index.type';
 
 process.stdin.on('data', (key) => {
@@ -20,17 +22,6 @@ process.stdin.on('data', (key) => {
 		process.exit(0);
 	}
 });
-
-async function readFileByPath(filePath: string) {
-	try {
-		const normalizedPath = path.normalize(filePath);
-		const fileInfo = path.parse(normalizedPath);
-		return fileInfo;
-	} catch (error) {
-		if (error instanceof Error)
-			console.error(`Got an error trying to read the file: ${error.message}`);
-	}
-}
 
 const googleFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
 const SCOPE = ['https://www.googleapis.com/auth/drive'];
@@ -47,7 +38,7 @@ const run = async () => {
 		const fileData = await readFileByPath(filePath);
 
 		if (!fileData) {
-			throw Error('');
+			throw Error('No file data');
 		}
 
 		displayFileInfo(fileData);
