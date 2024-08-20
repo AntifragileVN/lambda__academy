@@ -1,5 +1,5 @@
 {
-	"name": "07_cli_google_uploader",
+	"name": "09_cli_vacation_grouping",
 	"version": "1.0.0",
 	"main": "dist/index.js",
 	"scripts": {
@@ -20,10 +20,6 @@
 	"dependencies": {
 		"@inquirer/prompts": "^5.1.2",
 		"@types/node": "^20.14.10",
-		"axios": "^1.7.2",
-		"chalk": "^4.1.2",
-		"dotenv": "^16.4.5",
-		"fs": "^0.0.1-security",
-		"googleapis": "^140.0.1"
+		"fs": "^0.0.1-security"
 	}
 }

@@ -5,22 +5,21 @@ export const groupVacationByUsers = (vacations: Array<VacationRequest>) => {
 		const { user, startDate, endDate } = current;
 
 		const foundUser = total.find((request) => request.userId === user._id);
+
+		const vacationPeriod = {
+			startDate: startDate,
+			endDate: endDate,
+		};
+
 		if (foundUser) {
-			foundUser.weekendDates.push({
-				startDate,
-				endDate,
+			foundUser.weekendDates.push(vacationPeriod);
+		} else {
+			total.push({
+				userId: user._id,
+				name: user.name,
+				weekendDates: [vacationPeriod],
 			});
 		}
-		total.push({
-			userId: user._id,
-			name: user.name,
-			weekendDates: [
-				{
-					startDate,
-					endDate,
-				},
-			],
-		});
 		return total;
 	}, [] as Array<Vacation>);
 };
