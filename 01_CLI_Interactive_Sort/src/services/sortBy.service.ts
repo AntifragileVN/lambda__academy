@@ -13,40 +13,20 @@ export const sortAlphabetically = (str: string) => {
 };
 //b
 export const displayNumbersAscending = (str: string) => {
-	const strArray = str.split(' ');
-
-	const numbersArray = strArray.filter((item) => isNumeric(item));
-	return numbersArray
-		.sort((a, b) => {
-			if (a > b) {
-				return 1;
-			}
-
-			if (a < b) {
-				return -1;
-			}
-
-			return 0;
-		})
+	return str
+		.split(' ')
+		.filter(isNumeric)
+		.map(Number)
+		.sort((a, b) => a - b)
 		.join(' ');
 };
 //c
 export const displayNumbersDescending = (str: string) => {
-	const strArray = str.split(' ');
-
-	const numbersArray = strArray.filter((item) => isNumeric(item));
-	return numbersArray
-		.sort((a, b) => {
-			if (b > a) {
-				return 1;
-			}
-
-			if (b < a) {
-				return -1;
-			}
-
-			return 0;
-		})
+	return str
+		.split(' ')
+		.filter(isNumeric)
+		.map(Number)
+		.sort((a, b) => b - a)
 		.join(' ');
 };
 //d
