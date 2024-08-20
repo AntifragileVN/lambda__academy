@@ -35,9 +35,9 @@ const run = async () => {
 	}
 
 	while (continueSearching) {
-		const foundUser = await findUserByName(USERS);
-		if (foundUser) {
-			console.log(foundUser);
+		const foundUsers = await findUserByName(USERS);
+		if (foundUsers) {
+			console.log(foundUsers);
 		}
 		const confirmContinue = await confirm({ message: 'Continue users searching ?' });
 		if (!confirmContinue) {

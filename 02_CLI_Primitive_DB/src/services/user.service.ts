@@ -17,7 +17,7 @@ export const findUserByName = async (users: Array<User>) => {
 		transformer: (name) => name.trim(),
 	});
 
-	const foundUser = users.find((user) => user.name === searchedUserName);
+	const foundUser = users.filter((user) => user.name === searchedUserName);
 	if (!foundUser) {
 		console.log(`There is no user with name - ${searchedUserName}`);
 		return null;
